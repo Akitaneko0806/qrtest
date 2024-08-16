@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>送信完了</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container confirm-container">
+        <h1>アンケート送信完了</h1>
+        <div class="card">
+            <h2 class="card-title">以下の内容で送信されました。</h2>
+            <dl class="dl-horizontal">
+                <dt>地権者名</dt><dd>{{ survey_data.owner_name }}</dd>
+                <dt>（ヒラガナ）</dt><dd>{{ survey_data.owner_name_kana }}</dd>
+                <dt>連絡先選択</dt><dd>{{ survey_data.selectphoneormail }}</dd>
+                {% if survey_data.selectphoneormail == 'mail' %}
+                    <dt>メールアドレス</dt><dd>{{ survey_data.email }}</dd>
+                {% else %}
+                    <dt>お電話番号</dt><dd>{{ survey_data.contact_info }}</dd>
+                    <dt>電話連絡可能な時間</dt><dd>{{ survey_data.contact_time }}</dd>
+                {% endif %}
+                <dt>変更希望日時</dt><dd>{{ survey_data.preferred_date }}</dd>
+                <dt>時間</dt><dd>{{ survey_data.preferred_time }}</dd>
+                <dt>待合せ希望場所</dt><dd>{{ survey_data.meeting_place }}</dd>
+                <dt>委任の有無</dt><dd>{{ survey_data.proxy }}</dd>
+                {% if survey_data.proxy == 'あり' %}
+                    <dt>委任者名</dt><dd>{{ survey_data.proxy_name }}</dd>
+                    <dt>ひらがな</dt><dd>{{ survey_data.proxy_name_kana }}</dd>
+                {% endif %}
+                <dt>その他</dt><dd>{{ survey_data.additional_info }}</dd>
+            </dl>
+        </div>
+    </div>
+</body>
+</html>

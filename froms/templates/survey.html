@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アンケート</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/jquery.autoKana.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <div class="container survey-container">
+        <h1>QR日程調整</h1>
+        <p class="description">〇〇境界立会にご参加くださりありがとうございます<br>このページは日程変更のページです。<br>日程変更を希望の方は下記の入力をお願いします。<br></p>
+        <form action="{{ url_for('main.confirm') }}" method="POST">
+            <div class="form-group">
+                <label for="owner_name">地権者名 <span class="required">*</span></label>
+                <input type="text" id="owner_name" name="owner_name" value="{{ survey_data.get('owner_name', '') }}" required>
+            </div>
+            <div class="form-group">
+                <label for="owner_name_kana">（ヒラガナ） <span class="required">*</span></label>
+                <input type="text" id="owner_name_kana" name="owner_name_kana" value="{{ survey_data.get('owner_name_kana', '') }}" required>
+            </div>
+            <div class="form-group">
+                <label for="selectphoneormail">連絡先選択 <span class="required">*</span></label>
+                <select id="selectphoneormail" name="selectphoneormail" required>
+                    <option value="">選択</option>
+                    <option value="mail" {% if survey_data.get('selectphoneormail') == 'mail' %}selected{% endif %}>メールアドレス</option>
+                    <option value="phone" {% if survey_data.get('selectphoneormail') == 'phone' %}selected{% endif %}>携帯番号</option>
+                </select>
+            </div>
+            <div id="email_fields" style="display: {% if survey_data.get('selectphoneormail') == 'mail' %}block{% else %}none{% endif %}">
+                <div class="form-group">
+                    <label for="email">メールアドレス <span class="required">*</span></label>
+                    <small class="form-text text-muted">こちらのメールアドレスとお電話のいずれかに電話します。</small>
+                    <input type="email" id="email" name="email" value="{{ survey_data.get('email', '') }}">
+                    <small class="form-text text-muted">例: example@example.com</small>
+                </div>
+            </div>
+            <div id="phone_fields" style="display: {% if survey_data.get('selectphoneormail') == 'phone' %}block{% else %}none{% endif %}">
+                <div class="form-group">
+                    <label for="contact_info">お電話番号 <span class="required">*</span></label>
+                    <input type="text" id="contact_info" name="contact_info" value="{{ survey_data.get('contact_info', '') }}">
+                    <small class="form-text text-muted">例: 090-1234-5678</small>
+                </div>
+                <div class="form-group">
+                    <label for="contact_time">電話連絡可能な時間</label>
+                    <div class="checkbox-group">
+                        {% for time in ['09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
+                            <label><input type="checkbox" name="contact_time" value="{{ time }}" {% if time in survey_data.get('contact_time', []) %}checked{% endif %}> {{ time }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="proxy">委任の有無 <span class="required">*</span></label>
+                <select id="proxy" name="proxy" required>
+                    <option value="">選択</option>
+                    <option value="あり" {% if survey_data.get('proxy') == 'あり' %}selected{% endif %}>あり</option>
+                    <option value="なし" {% if survey_data.get('proxy') == 'なし' %}selected{% endif %}>なし</option>
+                </select>
+            </div>
+            <div id="proxy_details" style="display: {% if survey_data.get('proxy') == 'あり' %}block{% else %}none{% endif %}">
+                <div class="form-group">
+                    <label for="proxy_name">委任者名</label>
+                    <input type="text" id="proxy_name" name="proxy_name" value="{{ survey_data.get('proxy_name', '') }}">
+                </div>
+                <div class="form-group">
+                    <label for="proxy_name_kana">（ヒラガナ）</label>
+                    <input type="text" id="proxy_name_kana" name="proxy_name_kana" value="{{ survey_data.get('proxy_name_kana', '') }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="preferred_date">変更希望日時 <span class="required">*</span></label>
+                <input type="date" id="preferred_date" name="preferred_date" value="{{ survey_data.get('preferred_date', '') }}" required min="2024-08-10" max="2024-08-31">
+            </div>
+            <div class="form-group">
+                <label for="preferred_time">時間 <span class="required">*</span></label>
+                <select id="preferred_time" name="preferred_time" required>
+                    <option value="">選択</option>
+                    <option value="09:00" {% if survey_data.get('preferred_time') == '09:00' %}selected{% endif %}>9:00</option>
+                    <option value="10:00" {% if survey_data.get('preferred_time') == '10:00' %}selected{% endif %}>10:00</option>
+                    <option value="11:00" {% if survey_data.get('preferred_time') == '11:00' %}selected{% endif %}>11:00</option>
+                    <option value="13:00" {% if survey_data.get('preferred_time') == '13:00' %}selected{% endif %}>13:00</option>
+                    <option value="14:00" {% if survey_data.get('preferred_time') == '14:00' %}selected{% endif %}>14:00</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="meeting_place">待合せ希望場所 <span class="required">*</span></label>
+                <select id="meeting_place" name="meeting_place" required>
+                    <option value="">選択</option>
+                    <option value="自宅" {% if survey_data.get('meeting_place') == '自宅' %}selected{% endif %}>自宅</option>
+                    <option value="〇〇集合" {% if survey_data.get('meeting_place') == '〇〇集合' %}selected{% endif %}>〇〇集合</option>
+                    <option value="その他" {% if survey_data.get('meeting_place') == 'その他' %}selected{% endif %}>その他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="additional_info">その他</label>
+                <textarea id="additional_info" name="additional_info">{{ survey_data.get('additional_info', '') }}</textarea>
+            </div>
+            <div class="form-group" style="text-align: center;">
+                <button type="submit">送信</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // autokanaの初期化
+            if ($.fn.autoKana) {
+                $.fn.autoKana('#owner_name', '#owner_name_kana', {
+                    katakana: false  // ひらがなで出力する場合はfalseにします
+                });
+
+                $.fn.autoKana('#proxy_name', '#proxy_name_kana', {
+                    katakana: false  // ひらがなで出力する場合はfalseにします
+                });
+            } else {
+                console.error("AutoKanaが正しく読み込まれていません");
+            }
+
+            // 連絡先選択による表示切替
+            $('#selectphoneormail').on('change', function() {
+                if ($(this).val() === 'mail') {
+                    $('#email_fields').show();
+                    $('#phone_fields').hide();
+                    $('#email').attr('required', true);
+                    $('#contact_info').removeAttr('required');
+                } else if ($(this).val() === 'phone') {
+                    $('#phone_fields').show();
+                    $('#email_fields').hide();
+                    $('#contact_info').attr('required', true);
+                    $('#email').removeAttr('required');
+                } else {
+                    $('#email_fields').hide();
+                    $('#phone_fields').hide();
+                    $('#email').removeAttr('required');
+                    $('#contact_info').removeAttr('required');
+                }
+            });
+
+            // 委任の有無の選択による表示切替
+            $('#proxy').on('change', function() {
+                if ($(this).val() === 'あり') {
+                    $('#proxy_details').slideDown();  // リアルタイムで表示
+                } else {
+                    $('#proxy_details').slideUp();  // リアルタイムで非表示
+                }
+            });
+
+            // 日付選択のバリデーションとグレーアウト処理
+            $('#preferred_date').on('change', function() {
+                var selectedDate = new Date($(this).val());
+                var minDate = new Date('2024-08-10');
+                var maxDate = new Date('2024-08-31');
+
+                if (selectedDate < minDate || selectedDate > maxDate) {
+                    alert('選択できる期間は2024年8月10日から2024年8月31日までです。');
+                    $(this).val('');
+                }
+            });
+
+            // カレンダーの無効日をグレーアウト
+            $('#preferred_date').on('input', function() {
+                var inputDate = $(this).val();
+                var minDate = '2024-08-10';
+                var maxDate = '2024-08-31';
+
+                if (inputDate < minDate || inputDate > maxDate) {
+                    $(this).addClass('invalid-date');
+                } else {
+                    $(this).removeClass('invalid-date');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

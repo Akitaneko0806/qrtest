@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">アンケート内容の確認</h1>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">以下の内容でよろしいですか？</h5>
+            <dl class="row">
+                <dt class="col-sm-3">名前</dt>
+                <dd class="col-sm-9">{{ survey_data.name }}</dd>
+
+                <dt class="col-sm-3">ひらがな</dt>
+                <dd class="col-sm-9">{{ survey_data.kana }}</dd>
+
+                <dt class="col-sm-3">郵便番号</dt>
+                <dd class="col-sm-9">{{ survey_data.postal_code }}</dd>
+
+                <dt class="col-sm-3">住所</dt>
+                <dd class="col-sm-9">{{ survey_data.address }}</dd>
+
+                <dt class="col-sm-3">希望日時</dt>
+                <dd class="col-sm-9">{{ survey_data.preferred_date }}</dd>
+
+                <dt class="col-sm-3">希望場所</dt>
+                <dd class="col-sm-9">{{ survey_data.preferred_location }}</dd>
+
+                <dt class="col-sm-3">電話番号</dt>
+                <dd class="col-sm-9">{{ survey_data.phone }}</dd>
+
+                <dt class="col-sm-3">メールアドレス</dt>
+                <dd class="col-sm-9">{{ survey_data.email }}</dd>
+            </dl>
+        </div>
+    </div>
+    <div class="mt-4">
+        <form action="{{ url_for('main.index') }}" method="POST">
+            {% for key, value in survey_data.items() %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">送信する</button>
+        </form>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary mt-2">修正する</a>
+    </div>
+</div>
+{% endblock %}

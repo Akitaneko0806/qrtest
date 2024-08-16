@@ -1,0 +1,48 @@
+<!-- templates/show_data.html -->
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保存されたアンケートデータ</title>
+</head>
+<body>
+    <h1>保存されたアンケートデータ</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>地権者名</th>
+                <th>ひらがな</th>
+                <th>メールアドレス</th>
+                <th>電話番号</th>
+                <th>連絡可能な時間</th>
+                <th>委任者名</th>
+                <th>ひらがな</th>
+                <th>希望日時</th>
+                <th>希望場所</th>
+                <th>その他</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.owner_name }}</td>
+                <td>{{ item.owner_name_kana }}</td>
+                <td>{{ item.email }}</td>
+                <td>{{ item.contact_info }}</td>
+                <td>{{ item.contact_time }}</td>
+                <td>{{ item.proxy_name }}</td>
+                <td>{{ item.proxy_name_kana }}</td>
+                <td>{{ item.preferred_date }}</td>
+                <td>{{ item.preferred_time }}</td>
+                <td>{{ item.meeting_place }}</td>
+                <td>{{ item.additional_info }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
