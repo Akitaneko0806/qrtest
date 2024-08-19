@@ -29,8 +29,8 @@ class Config:
         pass
 
     @classmethod
-    def validate_config(cls):
-        required_vars = ['SECRET_KEY', 'SQLALCHEMY_DATABASE_URI', 'MAIL_USERNAME', 'MAIL_PASSWORD']
-        for var in required_vars:
-            if not getattr(cls, var):
-                raise ValueError(f"環境変数 {var} が設定されていません。")
+    def init_app(cls, app):
+        if not cls.SECRET_KEY or cls.SECRET_KEY == 'hard-to-guess-string':
+            app.logger.warning('SECRET_KEY is not set or is using default value')
+        if not cls.WTF_CSRF_SECRET_KEY or cls.WTF_CSRF_SECRET_KEY == 'csrf-secret-key':
+            app.logger.warning('WTF_CSRF_SECRET_KEY is not set or is using default value')

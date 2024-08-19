@@ -1,16 +1,14 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_session import Session
 import logging
 from logging.handlers import RotatingFileHandler
 from config import Config
 from dotenv import load_dotenv
-from flask_wtf.csrf import CSRFProtect, CSRFError
-from flask import Flask, jsonify
 
 # .envファイルを読み込む
 load_dotenv()
@@ -30,16 +28,18 @@ def create_app(config_class=Config):
     mail.init_app(app)
     csrf.init_app(app)
     session.init_app(app)
-    
-    @app.errorhandler(CSRFError)
-    def handle_csrf_error(e):
-        return jsonify(error=str(e)), 400
-    
+
     from app.routes import main_bp
     app.register_blueprint(main_bp)
 
     configure_logging(app)
     configure_error_handlers(app)
+    log_configuration(app)
+
+    @app.after_request
+    def add_csrf_token_to_response(response):
+        response.set_cookie('csrf_token', csrf.generate_csrf())
+        return response
 
     return app
 
@@ -64,10 +64,7 @@ def log_configuration(app):
     app.logger.info(f"MAIL_USE_SSL: {app.config.get('MAIL_USE_SSL')}")
     app.logger.info(f"MAIL_USERNAME: {app.config.get('MAIL_USERNAME')}")
     app.logger.info(f"SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
-    app.logger.info(f"Mail configuration: SERVER={app.config.get('MAIL_SERVER')}, "
-                    f"PORT={app.config.get('MAIL_PORT')}, "
-                    f"USE_TLS={app.config.get('MAIL_USE_TLS')}, "
-                    f"USE_SSL={app.config.get('MAIL_USE_SSL')}")
+    app.logger.info(f"WTF_CSRF_SECRET_KEY: {'設定済み' if app.config.get('WTF_CSRF_SECRET_KEY') else '未設定'}")
 
 def configure_error_handlers(app):
     @app.errorhandler(404)
@@ -79,9 +76,10 @@ def configure_error_handlers(app):
         db.session.rollback()
         return 'Internal server error', 500
 
-    @csrf.error_handler
+    @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        return "CSRF検証に失敗しました。ページを更新して再度お試しください。", 400
+        app.logger.error(f"CSRFエラーが発生しました: {e}")
+        return jsonify(error="CSRFトークンが無効です。ページを更新して再度お試しください。"), 400
 
 # アプリケーションインスタンスを作成
 app = create_app()
