@@ -76,7 +76,7 @@ def configure_error_handlers(app):
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        app.logger.error(f"CSRFエラーが発生しました: {e}")
+        app.logger.error(f"CSRFエラーが発生しました: {e.description}")
         return jsonify(error="CSRF検証に失敗しました。ページを更新して再度お試しください。"), 400
 
 # アプリケーションインスタンスを作成
