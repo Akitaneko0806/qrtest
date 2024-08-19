@@ -1,3 +1,1 @@
-# app/routes/__init__.py
-
-# このファイルは空のままにしておきます
+from .main import main_bp
