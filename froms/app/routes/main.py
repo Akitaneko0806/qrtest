@@ -5,7 +5,7 @@ from app.services.email_service import send_email
 from flask_wtf.csrf import CSRFProtect
 import logging
 from app.forms import SurveyForm
-from flask_wtf.csrf import generate_csrf
+from flask_wtf.csrf import generate_csrf, CSRFError
 
 main_bp = Blueprint('main', __name__)
 logger = logging.getLogger(__name__)
@@ -66,6 +66,19 @@ def page_not_found(e):
 def internal_server_error(e):
     logger.error("500エラーが発生しました", exc_info=True)
     return render_template('errors/500.html'), 500
+@main_bp.errorhandler(CSRFError)
+def handle_csrf_error(e):
+       logger.error(f"CSRFエラーが発生しました: {e}")
+       if request.is_xhr:
+           return jsonify(error=str(e)), 400
+       else:
+           flash("セキュリティトークンが無効です。ページを更新してもう一度お試しください。", "error")
+           return redirect(url_for('main.index'))
+
+@main_bp.after_request
+def add_csrf_token_to_response(response):
+       response.set_cookie('csrf_token', generate_csrf())
+       return response
 
 @main_bp.after_request
 def add_header(response):

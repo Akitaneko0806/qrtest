@@ -36,11 +36,6 @@ def create_app(config_class=Config):
     configure_error_handlers(app)
     log_configuration(app)
 
-    @app.after_request
-    def add_csrf_token_to_response(response):
-        response.set_cookie('csrf_token', csrf.generate_csrf())
-        return response
-
     return app
 
 def configure_logging(app):
@@ -64,7 +59,10 @@ def log_configuration(app):
     app.logger.info(f"MAIL_USE_SSL: {app.config.get('MAIL_USE_SSL')}")
     app.logger.info(f"MAIL_USERNAME: {app.config.get('MAIL_USERNAME')}")
     app.logger.info(f"SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
-    app.logger.info(f"WTF_CSRF_SECRET_KEY: {'設定済み' if app.config.get('WTF_CSRF_SECRET_KEY') else '未設定'}")
+    app.logger.info(f"Mail configuration: SERVER={app.config.get('MAIL_SERVER')}, "
+                    f"PORT={app.config.get('MAIL_PORT')}, "
+                    f"USE_TLS={app.config.get('MAIL_USE_TLS')}, "
+                    f"USE_SSL={app.config.get('MAIL_USE_SSL')}")
 
 def configure_error_handlers(app):
     @app.errorhandler(404)
@@ -79,7 +77,7 @@ def configure_error_handlers(app):
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         app.logger.error(f"CSRFエラーが発生しました: {e}")
-        return jsonify(error="CSRFトークンが無効です。ページを更新して再度お試しください。"), 400
+        return jsonify(error="CSRF検証に失敗しました。ページを更新して再度お試しください。"), 400
 
 # アプリケーションインスタンスを作成
 app = create_app()
