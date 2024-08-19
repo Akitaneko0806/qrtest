@@ -14,7 +14,7 @@
         <h1>QR日程調整</h1>
         <p class="description">〇〇境界立会にご参加くださりありがとうございます<br>このページは日程変更のページです。<br>日程変更を希望の方は下記の入力をお願いします。<br></p>
         <form id="survey-form" method="POST" action="{{ url_for('main.confirm') }}">
-            {{ form.hidden_tag() }}
+            {{ form.csrf_token }}
             <div class="form-group">
                 {{ form.owner_name.label }} <span class="required">*</span>
                 {{ form.owner_name(class="form-control", id="owner_name") }}
@@ -157,26 +157,27 @@
 
             // フォーム送信のハンドリング
             $('#survey-form').on('submit', function(e) {
-                e.preventDefault();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    type: 'POST',
-                    data: $(this).serialize(),
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            window.location.href = response.redirect;
-                        } else {
-                            alert(response.message || 'エラーが発生しました。');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText);
-                        alert('送信に失敗しました。もう一度お試しください。');
+            e.preventDefault();
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirect;
+                    } else {
+                        // エラー処理
                     }
-                });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
             });
         });
-    </script>
+    });
+</script>
 </body>
 </html>

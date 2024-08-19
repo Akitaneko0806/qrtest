@@ -33,28 +33,19 @@ def create_app(config_class=Config):
     app.register_blueprint(main_bp)
 
     configure_logging(app)
-    log_configuration(app)
+    configure_error_handlers(app)
 
     return app
 
 def configure_logging(app):
-    if not app.debug:
+    if not app.debug and not app.testing:
         if not os.path.exists('logs'):
             os.mkdir('logs')
-        
-        file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10, encoding='utf-8')
+        file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
         file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
-
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        console_handler.setLevel(logging.DEBUG)
-        app.logger.addHandler(console_handler)
 
         app.logger.setLevel(logging.INFO)
         app.logger.info('Survey startup')
@@ -72,10 +63,19 @@ def log_configuration(app):
                     f"USE_TLS={app.config.get('MAIL_USE_TLS')}, "
                     f"USE_SSL={app.config.get('MAIL_USE_SSL')}")
 
-# CSRFエラーハンドラの追加
-@csrf.error_handler
-def handle_csrf_error(e):
-    return "CSRF検証に失敗しました。ページを更新して再度お試しください。", 400
+def configure_error_handlers(app):
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return 'Page not found', 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return 'Internal server error', 500
+
+    @csrf.error_handler
+    def handle_csrf_error(e):
+        return "CSRF検証に失敗しました。ページを更新して再度お試しください。", 400
 
 # アプリケーションインスタンスを作成
 app = create_app()

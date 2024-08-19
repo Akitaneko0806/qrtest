@@ -1,11 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from app.models.survey import SurveyData
 from app import db
 from app.services.email_service import send_email
-from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 import logging
 from app.forms import SurveyForm
+from flask_wtf.csrf import generate_csrf
 
 main_bp = Blueprint('main', __name__)
 logger = logging.getLogger(__name__)
@@ -14,22 +14,21 @@ csrf = CSRFProtect()
 @main_bp.route('/', methods=['GET', 'POST'])
 def index():
     form = SurveyForm()
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            return redirect(url_for('main.confirm'))
-        else:
-            flash('入力内容に誤りがあります。', 'error')
-    return render_template('survey.html', form=form)
+    if form.validate_on_submit():
+        # フォームデータの処理
+        return redirect(url_for('main.confirm'))
+    return render_template('survey.html', form=form, csrf_token=generate_csrf())
 
 
-@main_bp.route('/confirm', methods=['GET', 'POST'])
+@main_bp.route('/confirm', methods=['POST'])
 def confirm():
     form = SurveyForm()
     if form.validate_on_submit():
-        survey_data = form.data
-        survey_data.pop('csrf_token', None)
-        return render_template('confirm.html', survey_data=survey_data)
-    return redirect(url_for('main.index'))
+        # フォームデータの処理
+        return jsonify({'success': True, 'redirect': url_for('main.submit')})
+    return jsonify({'success': False, 'errors': form.errors}), 400
+
+
 
 @main_bp.route('/submit', methods=['POST'])
 def submit():
@@ -83,3 +82,8 @@ def handle_csrf_error(e):
     else:
         flash("セキュリティトークンが無効です。ページを更新してもう一度お試しください。", "error")
         return redirect(url_for('main.index'))
+    
+@main_bp.after_request
+def add_csrf_token_to_response(response):
+    response.set_cookie('csrf_token', generate_csrf())
+    return response
