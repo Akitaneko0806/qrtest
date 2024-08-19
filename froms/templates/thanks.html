@@ -5,9 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>送信完了</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .alert-error {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+    </style>
 </head>
 <body>
     <div class="container confirm-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <h1>アンケート送信完了</h1>
         <div class="card">
             <h2 class="card-title">以下の内容で送信されました。</h2>
@@ -19,7 +45,7 @@
                     <dt>メールアドレス</dt><dd>{{ survey_data.email }}</dd>
                 {% else %}
                     <dt>お電話番号</dt><dd>{{ survey_data.contact_info }}</dd>
-                    <dt>電話連絡可能な時間</dt><dd>{{ survey_data.contact_time }}</dd>
+                    <dt>電話連絡可能な時間</dt><dd>{{ survey_data.contact_time | join(', ') if survey_data.contact_time is iterable else survey_data.contact_time }}</dd>
                 {% endif %}
                 <dt>変更希望日時</dt><dd>{{ survey_data.preferred_date }}</dd>
                 <dt>時間</dt><dd>{{ survey_data.preferred_time }}</dd>

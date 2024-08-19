@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-
+DEBUG = True
 load_dotenv()
 
 class Config:

@@ -3,6 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 import logging
 from logging.handlers import RotatingFileHandler
 from config import Config
@@ -14,11 +15,13 @@ load_dotenv()
 db = SQLAlchemy()
 mail = Mail()
 migrate = Migrate()
+csrf = CSRFProtect()
 
 def create_app(config_class=Config):
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     app.config.from_object(config_class)
-
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+    
     # 設定の読み込みを確認
     print("Loaded configuration:")
     print(f"MAIL_SERVER: {app.config.get('MAIL_SERVER')}")
@@ -32,6 +35,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     app.config['MAIL_DEBUG'] = True
     migrate.init_app(app, db)
+    csrf.init_app(app)
 
     from app.routes.main import main_bp
     app.register_blueprint(main_bp)
@@ -71,4 +75,5 @@ def create_app(config_class=Config):
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug_mode)

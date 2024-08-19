@@ -32,11 +32,12 @@
                 <dt>その他</dt><dd>{{ survey_data.additional_info }}</dd>
             </dl>
             <div class="button-group">
-                <form action="{{ url_for('main.submit') }}" method="POST" style="display:inline;">
+                <form action="{{ url_for('main.submit') }}" method="POST">
+                    {{ form.hidden_tag() }}
                     {% for key, value in survey_data.items() %}
                         {% if value is string %}
                             <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% elif value is iterable %}
+                        {% elif value is iterable and value is not mapping %}
                             {% for item in value %}
                                 <input type="hidden" name="{{ key }}" value="{{ item }}">
                             {% endfor %}
@@ -44,11 +45,11 @@
                     {% endfor %}
                     <button type="submit" class="btn btn-primary">送信</button>
                 </form>
-                <form action="{{ url_for('main.index') }}" method="GET" style="display:inline;">
+                <form action="{{ url_for('main.index') }}" method="GET">
                     {% for key, value in survey_data.items() %}
                         {% if value is string %}
                             <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% elif value is iterable %}
+                        {% elif value is iterable and value is not mapping %}
                             {% for item in value %}
                                 <input type="hidden" name="{{ key }}" value="{{ item }}">
                             {% endfor %}
