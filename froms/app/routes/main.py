@@ -1,100 +1,85 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.survey import SurveyData
 from app import db
 from app.services.email_service import send_email
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
 import logging
+from app.forms import SurveyForm
 
 main_bp = Blueprint('main', __name__)
 logger = logging.getLogger(__name__)
-
-class ConfirmForm(FlaskForm):
-    pass
+csrf = CSRFProtect()
 
 @main_bp.route('/', methods=['GET', 'POST'])
 def index():
-    survey_data = request.args.to_dict() if request.method == 'GET' else {}
-    return render_template('survey.html', survey_data=survey_data)
+    form = SurveyForm()
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            return redirect(url_for('main.confirm'))
+        else:
+            flash('入力内容に誤りがあります。', 'error')
+    return render_template('survey.html', form=form)
 
-@main_bp.route('/confirm', methods=['POST'])
+
+@main_bp.route('/confirm', methods=['GET', 'POST'])
 def confirm():
-    survey_data = request.form.to_dict()
-    form = ConfirmForm()
-    return render_template('confirm.html', survey_data=survey_data, form=form)
+    form = SurveyForm()
+    if form.validate_on_submit():
+        survey_data = form.data
+        survey_data.pop('csrf_token', None)
+        return render_template('confirm.html', survey_data=survey_data)
+    return redirect(url_for('main.index'))
 
 @main_bp.route('/submit', methods=['POST'])
 def submit():
-    form = ConfirmForm()
+    form = SurveyForm()
     if form.validate_on_submit():
-        survey_data = request.form.to_dict()
+        survey_data = form.data
+        survey_data.pop('csrf_token', None)
         
-        logger.info(f"Submit data: {survey_data}")
-        
-        try:
-            # データベースへの保存
-            survey_entry = SurveyData(
-                owner_name=survey_data['owner_name'],
-                owner_name_kana=survey_data['owner_name_kana'],
-                selectphoneormail=survey_data['selectphoneormail'],
-                email=survey_data.get('email'),
-                contact_info=survey_data.get('contact_info'),
-                contact_time=','.join(request.form.getlist('contact_time')),
-                proxy=survey_data['proxy'],
-                proxy_name=survey_data.get('proxy_name'),
-                proxy_name_kana=survey_data.get('proxy_name_kana'),
-                preferred_date=survey_data['preferred_date'],
-                preferred_time=survey_data['preferred_time'],
-                meeting_place=survey_data['meeting_place'],
-                additional_info=survey_data.get('additional_info')
-            )
-            db.session.add(survey_entry)
-            db.session.commit()
-            logger.info(f"Survey data saved to database. ID: {survey_entry.id}")
+        # データベースへの保存処理
+        new_survey = SurveyData(**survey_data)
+        db.session.add(new_survey)
+        db.session.commit()
 
-            # メールの送信
-            if survey_data.get('email'):
-                send_email(
-                    to=survey_data['email'],
-                    subject='アンケート送信確認',
-                    template='thanks_email.html',
-                    context={'survey_data': survey_data}
-                )
-                logger.info(f"Confirmation email sent to {survey_data['email']}")
+        # メール送信処理
+        send_email(to=survey_data['email'], subject='アンケート送信確認', template='thanks_email.html', context=survey_data)
+        send_email(to='admin@example.com', subject='新規アンケート送信', template='admin_notification.html', context=survey_data)
 
-            send_email(
-                to='admin@example.com',
-                subject='アンケート新規送信',
-                template='admin/survey_notification.html',
-                context={'survey_data': survey_data}
-            )
-            logger.info("Admin notification email sent")
-
-            flash('アンケートが正常に送信されました。確認メールをご確認ください。', 'success')
-            # セッションにsurvey_dataを保存
-            session['survey_data'] = survey_data
-            return redirect(url_for('main.thanks'))
-        
-        except Exception as e:
-            logger.error(f"Error occurred during form submission: {str(e)}", exc_info=True)
-            db.session.rollback()
-            flash('エラーが発生しました。後でもう一度お試しください。', 'error')
-            return redirect(url_for('main.index'))
+        flash('アンケートが正常に送信されました。', 'success')
+        return redirect(url_for('main.thanks'))
     else:
-        flash('無効なフォーム送信です。もう一度お試しください。', 'error')
+        flash('入力内容に誤りがあります。', 'error')
         return redirect(url_for('main.index'))
+
 
 @main_bp.route('/thanks')
 def thanks():
-    # セッションからsurvey_dataを取得
-    survey_data = session.pop('survey_data', None)
-    if survey_data is None:
-        return redirect(url_for('main.index'))
-    return render_template('thanks.html', survey_data=survey_data)
+    return render_template('thanks.html')
 
 @main_bp.errorhandler(404)
 def page_not_found(e):
+    logger.error("404エラーが発生しました")
     return render_template('errors/404.html'), 404
 
 @main_bp.errorhandler(500)
 def internal_server_error(e):
+    logger.error("500エラーが発生しました", exc_info=True)
     return render_template('errors/500.html'), 500
+
+@main_bp.after_request
+def add_header(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
+@csrf.error_handler
+def handle_csrf_error(e):
+    logger.error(f"CSRFエラーが発生しました: {e}")
+    if request.is_xhr:
+        return jsonify(error=str(e)), 400
+    else:
+        flash("セキュリティトークンが無効です。ページを更新してもう一度お試しください。", "error")
+        return redirect(url_for('main.index'))

@@ -13,91 +13,72 @@
     <div class="container survey-container">
         <h1>QR日程調整</h1>
         <p class="description">〇〇境界立会にご参加くださりありがとうございます<br>このページは日程変更のページです。<br>日程変更を希望の方は下記の入力をお願いします。<br></p>
-        <form action="{{ url_for('main.confirm') }}" method="POST">
+        <form id="survey-form" method="POST" action="{{ url_for('main.confirm') }}">
+            {{ form.hidden_tag() }}
             <div class="form-group">
-                <label for="owner_name">地権者名 <span class="required">*</span></label>
-                <input type="text" id="owner_name" name="owner_name" value="{{ survey_data.get('owner_name', '') }}" required>
+                {{ form.owner_name.label }} <span class="required">*</span>
+                {{ form.owner_name(class="form-control", id="owner_name") }}
             </div>
             <div class="form-group">
-                <label for="owner_name_kana">（ヒラガナ） <span class="required">*</span></label>
-                <input type="text" id="owner_name_kana" name="owner_name_kana" value="{{ survey_data.get('owner_name_kana', '') }}" required>
+                {{ form.owner_name_kana.label }} <span class="required">*</span>
+                {{ form.owner_name_kana(class="form-control", id="owner_name_kana") }}
             </div>
             <div class="form-group">
-                <label for="selectphoneormail">連絡先選択 <span class="required">*</span></label>
-                <select id="selectphoneormail" name="selectphoneormail" required>
-                    <option value="">選択</option>
-                    <option value="mail" {% if survey_data.get('selectphoneormail') == 'mail' %}selected{% endif %}>メールアドレス</option>
-                    <option value="phone" {% if survey_data.get('selectphoneormail') == 'phone' %}selected{% endif %}>携帯番号</option>
-                </select>
+                {{ form.selectphoneormail.label }} <span class="required">*</span>
+                {{ form.selectphoneormail(class="form-control", id="selectphoneormail") }}
             </div>
-            <div id="email_fields" style="display: {% if survey_data.get('selectphoneormail') == 'mail' %}block{% else %}none{% endif %}">
+            <div id="email_fields" style="display: none;">
                 <div class="form-group">
-                    <label for="email">メールアドレス <span class="required">*</span></label>
+                    {{ form.email.label }} <span class="required">*</span>
                     <small class="form-text text-muted">こちらのメールアドレスとお電話のいずれかに電話します。</small>
-                    <input type="email" id="email" name="email" value="{{ survey_data.get('email', '') }}">
+                    {{ form.email(class="form-control", id="email") }}
                     <small class="form-text text-muted">例: example@example.com</small>
                 </div>
             </div>
-            <div id="phone_fields" style="display: {% if survey_data.get('selectphoneormail') == 'phone' %}block{% else %}none{% endif %}">
+            <div id="phone_fields" style="display: none;">
                 <div class="form-group">
-                    <label for="contact_info">お電話番号 <span class="required">*</span></label>
-                    <input type="text" id="contact_info" name="contact_info" value="{{ survey_data.get('contact_info', '') }}">
+                    {{ form.contact_info.label }} <span class="required">*</span>
+                    {{ form.contact_info(class="form-control", id="contact_info") }}
                     <small class="form-text text-muted">例: 090-1234-5678</small>
                 </div>
                 <div class="form-group">
-                    <label for="contact_time">電話連絡可能な時間</label>
+                    {{ form.contact_time.label }}
                     <div class="checkbox-group">
-                        {% for time in ['09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00'] %}
-                            <label><input type="checkbox" name="contact_time" value="{{ time }}" {% if time in survey_data.get('contact_time', []) %}checked{% endif %}> {{ time }}</label>
+                        {% for subfield in form.contact_time %}
+                            <label>{{ subfield }} {{ subfield.label.text }}</label>
                         {% endfor %}
                     </div>
                 </div>
             </div>
             <div class="form-group">
-                <label for="proxy">委任の有無 <span class="required">*</span></label>
-                <select id="proxy" name="proxy" required>
-                    <option value="">選択</option>
-                    <option value="あり" {% if survey_data.get('proxy') == 'あり' %}selected{% endif %}>あり</option>
-                    <option value="なし" {% if survey_data.get('proxy') == 'なし' %}selected{% endif %}>なし</option>
-                </select>
+                {{ form.proxy.label }} <span class="required">*</span>
+                {{ form.proxy(class="form-control", id="proxy") }}
             </div>
-            <div id="proxy_details" style="display: {% if survey_data.get('proxy') == 'あり' %}block{% else %}none{% endif %}">
+            <div id="proxy_details" style="display: none;">
                 <div class="form-group">
-                    <label for="proxy_name">委任者名</label>
-                    <input type="text" id="proxy_name" name="proxy_name" value="{{ survey_data.get('proxy_name', '') }}">
+                    {{ form.proxy_name.label }}
+                    {{ form.proxy_name(class="form-control", id="proxy_name") }}
                 </div>
                 <div class="form-group">
-                    <label for="proxy_name_kana">（ヒラガナ）</label>
-                    <input type="text" id="proxy_name_kana" name="proxy_name_kana" value="{{ survey_data.get('proxy_name_kana', '') }}">
+                    {{ form.proxy_name_kana.label }}
+                    {{ form.proxy_name_kana(class="form-control", id="proxy_name_kana") }}
                 </div>
             </div>
             <div class="form-group">
-                <label for="preferred_date">変更希望日時 <span class="required">*</span></label>
-                <input type="date" id="preferred_date" name="preferred_date" value="{{ survey_data.get('preferred_date', '') }}" required min="2024-08-10" max="2024-08-31">
+                {{ form.preferred_date.label }} <span class="required">*</span>
+                {{ form.preferred_date(class="form-control", id="preferred_date", min="2024-08-10", max="2024-08-31") }}
             </div>
             <div class="form-group">
-                <label for="preferred_time">時間 <span class="required">*</span></label>
-                <select id="preferred_time" name="preferred_time" required>
-                    <option value="">選択</option>
-                    <option value="09:00" {% if survey_data.get('preferred_time') == '09:00' %}selected{% endif %}>9:00</option>
-                    <option value="10:00" {% if survey_data.get('preferred_time') == '10:00' %}selected{% endif %}>10:00</option>
-                    <option value="11:00" {% if survey_data.get('preferred_time') == '11:00' %}selected{% endif %}>11:00</option>
-                    <option value="13:00" {% if survey_data.get('preferred_time') == '13:00' %}selected{% endif %}>13:00</option>
-                    <option value="14:00" {% if survey_data.get('preferred_time') == '14:00' %}selected{% endif %}>14:00</option>
-                </select>
+                {{ form.preferred_time.label }} <span class="required">*</span>
+                {{ form.preferred_time(class="form-control", id="preferred_time") }}
             </div>
             <div class="form-group">
-                <label for="meeting_place">待合せ希望場所 <span class="required">*</span></label>
-                <select id="meeting_place" name="meeting_place" required>
-                    <option value="">選択</option>
-                    <option value="自宅" {% if survey_data.get('meeting_place') == '自宅' %}selected{% endif %}>自宅</option>
-                    <option value="〇〇集合" {% if survey_data.get('meeting_place') == '〇〇集合' %}selected{% endif %}>〇〇集合</option>
-                    <option value="その他" {% if survey_data.get('meeting_place') == 'その他' %}selected{% endif %}>その他</option>
-                </select>
+                {{ form.meeting_place.label }} <span class="required">*</span>
+                {{ form.meeting_place(class="form-control", id="meeting_place") }}
             </div>
             <div class="form-group">
-                <label for="additional_info">その他</label>
-                <textarea id="additional_info" name="additional_info">{{ survey_data.get('additional_info', '') }}</textarea>
+                {{ form.additional_info.label }}
+                {{ form.additional_info(class="form-control", id="additional_info") }}
             </div>
             <div class="form-group" style="text-align: center;">
                 <button type="submit">送信</button>
@@ -172,6 +153,28 @@
                 } else {
                     $(this).removeClass('invalid-date');
                 }
+            });
+
+            // フォーム送信のハンドリング
+            $('#survey-form').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            window.location.href = response.redirect;
+                        } else {
+                            alert(response.message || 'エラーが発生しました。');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', xhr.responseText);
+                        alert('送信に失敗しました。もう一度お試しください。');
+                    }
+                });
             });
         });
     </script>
