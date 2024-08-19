@@ -9,6 +9,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from config import Config
 from dotenv import load_dotenv
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask import Flask, jsonify
 
 # .envファイルを読み込む
 load_dotenv()
@@ -28,7 +30,11 @@ def create_app(config_class=Config):
     mail.init_app(app)
     csrf.init_app(app)
     session.init_app(app)
-
+    
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        return jsonify(error=str(e)), 400
+    
     from app.routes import main_bp
     app.register_blueprint(main_bp)
 

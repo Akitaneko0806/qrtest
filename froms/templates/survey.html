@@ -157,27 +157,26 @@
 
             // フォーム送信のハンドリング
             $('#survey-form').on('submit', function(e) {
-            e.preventDefault();
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: $(this).serialize(),
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        window.location.href = response.redirect;
-                    } else {
-                        // エラー処理
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', xhr.responseText);
-                }
-            });
-        });
+    e.preventDefault();
+    var csrftoken = $('input[name=csrf_token]').val();
+    $.ajax({
+        url: $(this).attr('action'),
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        headers: {
+            "X-CSRFToken": csrftoken
+        },
+        success: function(response) {
+            // 成功時の処理
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', xhr.responseText);
+            // エラー時の処理
+        }
     });
+});
+        });
 </script>
 </body>
 </html>
