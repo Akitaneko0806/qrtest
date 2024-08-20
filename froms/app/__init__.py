@@ -9,7 +9,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 from config import Config
 import os
-
 db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
