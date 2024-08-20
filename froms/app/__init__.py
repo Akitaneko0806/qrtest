@@ -1,13 +1,13 @@
-import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf import CSRFProtect
 from flask_session import Session
 import logging
 from logging.handlers import RotatingFileHandler
 from config import Config
+import os
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -56,6 +56,7 @@ def configure_error_handlers(app):
         db.session.rollback()
         return 'Internal server error', 500
 
-    @csrf.error_handler
+    from flask_wtf.csrf import CSRFError
+    @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         return "CSRF検証に失敗しました。ページを更新して再度お試しください。", 400
