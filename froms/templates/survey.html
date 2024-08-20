@@ -13,7 +13,7 @@
     <div class="container survey-container">
         <h1>QR日程調整</h1>
         <p class="description">〇〇境界立会にご参加くださりありがとうございます<br>このページは日程変更のページです。<br>日程変更を希望の方は下記の入力をお願いします。<br></p>
-        <form id="survey-form" method="POST" action="{{ url_for('main.confirm') }}">
+        <form method="POST" action="{{ url_for('main.submit') }}">
             {{ form.csrf_token }}
             <div class="form-group">
                 {{ form.owner_name.label }} <span class="required">*</span>
