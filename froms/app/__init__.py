@@ -1,17 +1,13 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
 import logging
 from logging.handlers import RotatingFileHandler
 from config import Config
-from dotenv import load_dotenv
-
-# .envファイルを読み込む
-load_dotenv()
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -34,7 +30,6 @@ def create_app(config_class=Config):
 
     configure_logging(app)
     configure_error_handlers(app)
-    log_configuration(app)
 
     return app
 
@@ -51,19 +46,6 @@ def configure_logging(app):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Survey startup')
 
-def log_configuration(app):
-    app.logger.info("Loaded configuration:")
-    app.logger.info(f"MAIL_SERVER: {app.config.get('MAIL_SERVER')}")
-    app.logger.info(f"MAIL_PORT: {app.config.get('MAIL_PORT')}")
-    app.logger.info(f"MAIL_USE_TLS: {app.config.get('MAIL_USE_TLS')}")
-    app.logger.info(f"MAIL_USE_SSL: {app.config.get('MAIL_USE_SSL')}")
-    app.logger.info(f"MAIL_USERNAME: {app.config.get('MAIL_USERNAME')}")
-    app.logger.info(f"SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
-    app.logger.info(f"Mail configuration: SERVER={app.config.get('MAIL_SERVER')}, "
-                    f"PORT={app.config.get('MAIL_PORT')}, "
-                    f"USE_TLS={app.config.get('MAIL_USE_TLS')}, "
-                    f"USE_SSL={app.config.get('MAIL_USE_SSL')}")
-
 def configure_error_handlers(app):
     @app.errorhandler(404)
     def not_found_error(error):
@@ -74,14 +56,6 @@ def configure_error_handlers(app):
         db.session.rollback()
         return 'Internal server error', 500
 
-    @app.errorhandler(CSRFError)
+    @csrf.error_handler
     def handle_csrf_error(e):
-     app.logger.error(f"CSRFエラーが発生しました: {e.description}")
-    return jsonify(error="CSRF検証に失敗しました。ページを更新して再度お試しください。"), 400
-
-# アプリケーションインスタンスを作成
-app = create_app()
-
-if __name__ == '__main__':
-    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    app.run(debug=debug_mode)
+        return "CSRF検証に失敗しました。ページを更新して再度お試しください。", 400

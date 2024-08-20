@@ -12,48 +12,22 @@
         <div class="card">
             <h2 class="card-title">アンケート内容確認</h2>
             <dl class="dl-horizontal">
-                <dt>地権者名</dt><dd>{{ survey_data.owner_name }}</dd>
-                <dt>（ヒラガナ）</dt><dd>{{ survey_data.owner_name_kana }}</dd>
-                <dt>連絡先選択</dt><dd>{{ survey_data.selectphoneormail }}</dd>
-                {% if survey_data.selectphoneormail == 'mail' %}
-                    <dt>メールアドレス</dt><dd>{{ survey_data.email }}</dd>
-                {% else %}
-                    <dt>お電話番号</dt><dd>{{ survey_data.contact_info }}</dd>
-                    <dt>電話連絡可能な時間</dt><dd>{{ survey_data.contact_time | join(', ') if survey_data.contact_time is iterable else survey_data.contact_time }}</dd>
-                {% endif %}
-                <dt>変更希望日時</dt><dd>{{ survey_data.preferred_date }}</dd>
-                <dt>時間</dt><dd>{{ survey_data.preferred_time }}</dd>
-                <dt>待合せ希望場所</dt><dd>{{ survey_data.meeting_place }}</dd>
-                <dt>委任の有無</dt><dd>{{ survey_data.proxy }}</dd>
-                {% if survey_data.proxy == 'あり' %}
-                    <dt>委任者名</dt><dd>{{ survey_data.proxy_name }}</dd>
-                    <dt>ひらがな</dt><dd>{{ survey_data.proxy_name_kana }}</dd>
-                {% endif %}
-                <dt>その他</dt><dd>{{ survey_data.additional_info }}</dd>
+                {% for key, value in survey_data.items() %}
+                    <dt>{{ key }}</dt>
+                    <dd>{{ value }}</dd>
+                {% endfor %}
             </dl>
             <div class="button-group">
                 <form action="{{ url_for('main.submit') }}" method="POST">
-                    {{ form.hidden_tag() }}
+                    {{ form.csrf_token }}
                     {% for key, value in survey_data.items() %}
-                        {% if value is string %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% elif value is iterable and value is not mapping %}
-                            {% for item in value %}
-                                <input type="hidden" name="{{ key }}" value="{{ item }}">
-                            {% endfor %}
-                        {% endif %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
                     {% endfor %}
                     <button type="submit" class="btn btn-primary">送信</button>
                 </form>
                 <form action="{{ url_for('main.index') }}" method="GET">
                     {% for key, value in survey_data.items() %}
-                        {% if value is string %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% elif value is iterable and value is not mapping %}
-                            {% for item in value %}
-                                <input type="hidden" name="{{ key }}" value="{{ item }}">
-                            {% endfor %}
-                        {% endif %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
                     {% endfor %}
                     <button type="submit" class="btn btn-secondary">修正する</button>
                 </form>
